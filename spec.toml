@@ -1,0 +1,29 @@
+[project]
+name = "hello_world"
+version = "0.1.0"
+seed = 42
+locale = "en_US"
+
+[run]
+batch_size = 100
+validate = true
+assert = false
+
+[[schema.tables]]
+name = "hello"
+row_count = 3
+
+[[schema.tables.fields]]
+name = "id"
+type = "int"
+nullable = false
+generator = { kind = "sequence", start = 1 }
+
+[[schema.tables.fields]]
+name = "message"
+type = "text"
+nullable = false
+generator = { kind = "constant", value = "Hello, World" }
+
+[schema.tables.primary_key]
+fields = ["id"]

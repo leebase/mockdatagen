@@ -1,0 +1,29 @@
+{
+  "project": "ralph-opencode-test",
+  "branchName": "main",
+  "description": "HelloWorld test for OpenCode CLI invocation.",
+  "definitionOfDone": [
+    "Print a hello world style story prompt",
+    "Include a simple verification plan"
+  ],
+  "loops": [
+    {
+      "loopId": "L00",
+      "title": "HelloWorld test",
+      "goal": "Validate OpenCode CLI input handling.",
+      "stories": [
+        {
+          "id": "US-000",
+          "title": "HelloWorld story",
+          "acceptanceCriteria": [
+            "Output a short hello world prompt"
+          ],
+          "tests": [
+            "No tests; just echo the prompt"
+          ],
+          "status": "TODO"
+        }
+      ]
+    }
+  ]
+}

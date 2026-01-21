@@ -1,0 +1,387 @@
+{
+  "project": "toml-mockgen-sqlite",
+  "branchName": "main",
+  "description": "Ralph Wiggum loop project: TOML-driven, deterministic offline mock data generator (Python) outputting to SQLite. Supports domain dictionaries as assets and scenario-driven fact generation (fraud injection at 0.5%, time-series MoM growth with June dip). LLM used only for authoring TOML/specs and optional one-time asset creation, never at runtime.",
+  "definitionOfDone": [
+    "All stories in the current loop are implemented",
+    "All unit and integration tests pass",
+    "Verifier scripts pass and were not modified except by explicit verifier-change story",
+    "CLI commands for the loop are functional",
+    "A loop progress entry is added under progress/ with results and next risks",
+    "Spec examples for new features are added under specs/"
+  ],
+  "loops": [
+    {
+      "loopId": "L01",
+      "title": "Project skeleton + spec validation + SQLite baseline generation",
+      "goal": "Create runnable CLI, validate TOML spec structure, generate 2 simple tables into SQLite deterministically.",
+      "stories": [
+        {
+          "id": "US-001",
+          "title": "Repo scaffold and OpenCode/Ralph loop structure",
+          "acceptanceCriteria": [
+            "Repo contains docs/, src/, verify/, specs/, assets/, progress/",
+            "OpenCode entrypoint documented (how to run loops)",
+            "Basic CI/test runner exists (pytest)"
+          ],
+          "tests": [
+            "pytest runs and passes trivial test",
+            "verify/ harness runs and reports baseline status"
+          ],
+          "status": "DONE"
+        },
+        {
+          "id": "US-002",
+          "title": "TOML spec loader + strict validation models",
+          "acceptanceCriteria": [
+            "spec.toml parsed and validated",
+            "Meaningful error messages for missing/invalid fields",
+            "format_spec canonicalizer produces stable ordering"
+          ],
+          "tests": [
+            "unit: invalid spec cases produce expected errors",
+            "unit: canonicalizer stable output"
+          ],
+          "status": "DONE"
+        },
+        {
+          "id": "US-003",
+          "title": "SQLite writer baseline (schema + inserts)",
+          "acceptanceCriteria": [
+            "Engine creates SQLite db, creates tables, inserts rows",
+            "Transaction + batch inserts implemented",
+            "Deterministic seed yields identical outputs across runs"
+          ],
+          "tests": [
+            "integration: generate small db and verify row counts",
+            "integration: rerun with same seed yields identical table checksums"
+          ],
+          "status": "DONE"
+        }
+      ],
+      "verifier": [
+        "verify/test_basic_generation.py",
+        "verify/test_determinism.py"
+      ]
+    },
+    {
+      "loopId": "L02",
+      "title": "Schema graph + PK/FK ordering + basic generators",
+      "goal": "Support PK/FK definitions in TOML, compile dependency DAG, generate parent tables before child tables.",
+      "stories": [
+        {
+          "id": "US-010",
+          "title": "Schema compiler builds table dependency graph",
+          "acceptanceCriteria": [
+            "FK graph built from TOML",
+            "Topological sort determines generation order",
+            "Cycle detection emits NEEDS_CAPABILITY:CYCLE_HANDLING"
+          ],
+          "tests": [
+            "unit: DAG sort order correct for sample spec",
+            "unit: cycles detected"
+          ],
+          "status": "DONE"
+        },
+        {
+          "id": "US-011",
+          "title": "Primary key generators (sequence, uuid)",
+          "acceptanceCriteria": [
+            "sequence PK supported",
+            "uuid PK supported",
+            "PK uniqueness validated in verifier"
+          ],
+          "tests": [
+            "unit: sequence deterministic",
+            "integration: uniqueness check passes"
+          ],
+          "status": "DONE"
+        },
+        {
+          "id": "US-012",
+          "title": "Foreign key generator (uniform selection from parent keys)",
+          "acceptanceCriteria": [
+            "Child FK values always reference valid parent keys",
+            "Optional weighted FK selection reserved for future capability"
+          ],
+          "tests": [
+            "integration: FK integrity validated with PRAGMA foreign_keys=ON in verifier"
+          ],
+          "status": "DONE"
+        }
+      ],
+      "verifier": ["verify/test_fk_integrity.py"]
+    },
+    {
+      "loopId": "L03",
+      "title": "Assets registry + dictionary sampling + derived fields",
+      "goal": "Enable domain lists (medications, business names) from files; add derived field expressions.",
+      "stories": [
+        {
+          "id": "US-020",
+          "title": "Assets registry for dictionaries (CSV/JSON)",
+          "acceptanceCriteria": [
+            "assets.dictionary entries load from file",
+            "Optional weight column supported",
+            "Spec references resolve to assets"
+          ],
+          "tests": [
+            "unit: csv/json loads",
+            "unit: weighted sampling distribution sanity"
+          ],
+          "status": "DONE"
+        },
+        {
+          "id": "US-021",
+          "title": "Dictionary-based field generator",
+          "acceptanceCriteria": [
+            "Fields can reference assets dictionaries",
+            "Optional unique constraint enforcement on a field (best-effort MVP)"
+          ],
+          "tests": ["integration: values come from dictionary set"],
+          "status": "DONE"
+        },
+        {
+          "id": "US-022",
+          "title": "Derived fields (simple expression language)",
+          "acceptanceCriteria": [
+            "derived generator supports expressions referencing prior fields in row",
+            "Expressions are validated at spec-compile time"
+          ],
+          "tests": [
+            "unit: expression evaluation",
+            "integration: derived column correct"
+          ],
+          "status": "DONE"
+        }
+      ],
+      "verifier": ["verify/test_assets_and_derived.py"]
+    },
+    {
+      "loopId": "L04",
+      "title": "Scenario primitive: injection + mutation (fraud 0.5%)",
+      "goal": "Support fraud injection at a target rate with deterministic row selection and correlated mutations.",
+      "stories": [
+        {
+          "id": "US-030",
+          "title": "Scenario framework + overlays",
+          "acceptanceCriteria": [
+            "Scenario selection via CLI",
+            "Scenario seeds override project seed",
+            "Scenario applies inject/mutate plan deterministically"
+          ],
+          "tests": ["integration: scenario run produces stable outputs"],
+          "status": "DONE"
+        },
+        {
+          "id": "US-031",
+          "title": "Injection engine (rate-based row labeling)",
+          "acceptanceCriteria": [
+            "Inject marks ~0.5% rows with label field",
+            "Deterministic selection stable across runs and parallelism settings",
+            "Exact-count mode supported (round(rate*N))"
+          ],
+          "tests": [
+            "integration: fraud rate within tolerance",
+            "unit: selection stability"
+          ],
+          "status": "DONE"
+        },
+        {
+          "id": "US-032",
+          "title": "Mutations on injected rows (amount/channel/merchant)",
+          "acceptanceCriteria": [
+            "Injected rows receive altered distributions",
+            "Mutations can set fields via generator blocks",
+            "Mutations can be conditional on where-clause"
+          ],
+          "tests": [
+            "integration: fraud amounts higher than baseline statistically"
+          ],
+          "status": "DONE"
+        },
+        {
+          "id": "US-033",
+          "title": "Scenario assertions (expression and SQL)",
+          "acceptanceCriteria": [
+            "Assertions run automatically after generation (if enabled)",
+            "Assertions produce JSON report with pass/fail and metrics"
+          ],
+          "tests": [
+            "integration: fraud assertions pass",
+            "integration: failing assertion returns non-zero exit code"
+          ],
+          "status": "DONE"
+        }
+      ],
+      "verifier": ["verify/test_fraud_scenario.py"]
+    },
+    {
+      "loopId": "L05",
+      "title": "Time-series fact shaping (MoM growth + June dip)",
+      "goal": "Generate sales facts with upward monthly trend and a June outlier at -20%, optionally cohort-specific.",
+      "stories": [
+        {
+          "id": "US-040",
+          "title": "Monthly schedule generator for fact tables",
+          "acceptanceCriteria": [
+            "Facts can be generated by month within a date range",
+            "Trend model supports compound growth monthly_rate",
+            "Scenario can override month volume_multiplier"
+          ],
+          "tests": ["unit: expected volumes computed correctly"],
+          "status": "DONE"
+        },
+        {
+          "id": "US-041",
+          "title": "June dip scenario override",
+          "acceptanceCriteria": [
+            "June volume is ~20% below expected trend",
+            "Other months follow growth trend",
+            "Summary report shows monthly totals"
+          ],
+          "tests": ["integration: month totals verify June outlier"],
+          "status": "DONE"
+        }
+      ],
+      "verifier": ["verify/test_sales_june_dip.py"]
+    },
+    {
+      "loopId": "L06",
+      "title": "Validation reports + summarize + plan output",
+      "goal": "Make outputs consumable: plan JSON, validate report, summarize report, assertion report.",
+      "stories": [
+        {
+          "id": "US-050",
+          "title": "plan command outputs compiled plan JSON",
+          "acceptanceCriteria": [
+            "Plan includes table order, row counts, required assets, scenario operations",
+            "plan output is stable across runs"
+          ],
+          "tests": ["integration: plan json schema validated"],
+          "status": "DONE"
+        },
+        {
+          "id": "US-051",
+          "title": "summarize command outputs dataset metrics",
+          "acceptanceCriteria": [
+            "Row counts per table",
+            "Null rates per column (sampled for huge tables in MVP)",
+            "Scenario-specific metrics (fraud rate, monthly totals)"
+          ],
+          "tests": ["integration: summary contains required metrics"],
+          "status": "DONE"
+        }
+      ],
+      "verifier": ["verify/test_reports.py"]
+    },
+    {
+      "loopId": "L07",
+      "title": "LLM authoring kit (offline) for generating new TOMLs",
+      "goal": "Provide prompt packs and canonical examples so an LLM can reliably generate new specs; generator still runs offline.",
+      "stories": [
+        {
+          "id": "US-060",
+          "title": "Publish canonical spec schema + examples for LLM input",
+          "acceptanceCriteria": [
+            "docs/specReference.md exists (DSL reference)",
+            "specs/ contains canonical examples for fraud and june dip",
+            "format_spec produces canonical input suitable for LLM"
+          ],
+          "tests": ["integration: examples validate successfully"],
+          "status": "DONE"
+        },
+        {
+          "id": "US-061",
+          "title": "NEEDS_CAPABILITY messaging for unsupported spec features",
+          "acceptanceCriteria": [
+            "Engine emits NEEDS_CAPABILITY:<cap> with actionable explanation",
+            "Non-zero exit code returned"
+          ],
+          "tests": ["unit: unsupported generator triggers NEEDS_CAPABILITY"],
+          "status": "DONE"
+        }
+      ],
+      "verifier": ["verify/test_needs_capability.py"]
+    }
+    ,
+    {
+      "loopId": "L08",
+      "title": "MVP completeness: CLI coverage + ER diagram",
+      "goal": "Finish MVP requirements: validate/assert commands, Mermaid ER output, and spec.toml generation smoke.",
+      "stories": [
+        {
+          "id": "US-070",
+          "title": "Validate + assert CLI commands",
+          "acceptanceCriteria": [
+            "validate command runs spec+asset validation and exits non-zero on errors",
+            "assert command runs scenario assertions against a generated SQLite db",
+            "Commands are documented in README or docs/"
+          ],
+          "tests": [
+            "integration: validate rejects malformed spec",
+            "integration: assert fails on known-bad scenario"
+          ],
+          "status": "DONE"
+        },
+        {
+          "id": "US-071",
+          "title": "Mermaid ER diagram output",
+          "acceptanceCriteria": [
+            "generate produces a mermaid.js ER diagram file",
+            "ER diagram includes tables, columns, PKs, FKs",
+            "Output path is configurable via CLI flag"
+          ],
+          "tests": [
+            "integration: ER diagram file exists and contains table names"
+          ],
+          "status": "DONE"
+        },
+        {
+          "id": "US-072",
+          "title": "spec.toml smoke generation",
+          "acceptanceCriteria": [
+            "opencode run generate --spec spec.toml --scenario baseline --out out.db succeeds",
+            "hello table created with 3 rows",
+            "message column equals \"Hello, World\" for all rows"
+          ],
+          "tests": [
+            "integration: spec.toml generates expected hello table"
+          ],
+          "status": "DONE"
+        }
+      ],
+      "verifier": [
+        "verify/test_cli_validate_assert.py",
+        "verify/test_er_diagram.py",
+        "verify/test_spec_toml_smoke.py"
+      ]
+    }
+  ],
+  "extraRalphArtifacts": [
+    {
+      "name": "progress/progress.md",
+      "purpose": "Append-only loop log: what changed, what passed, what failed, next risks."
+    },
+    {
+      "name": "docs/specReference.md",
+      "purpose": "The DSL reference for humans and as LLM context."
+    },
+    {
+      "name": "verify/README.md",
+      "purpose": "Explains verifier trust boundary and how tests are structured."
+    },
+    {
+      "name": "docs/HowToRalphWiggum.md",
+      "purpose": "Explains how to run iterative OpenCode loops: define stories, implement, test, lock verifiers, log progress."
+    }
+  ],
+  "capabilityList": [
+    "CYCLE_HANDLING (deferred constraints / staged inserts)",
+    "WEIGHTED_FK_SELECTION",
+    "BURST_EVENT_PATTERN",
+    "COHORT_WEIGHT_ALLOCATION",
+    "PARQUET_OUTPUT",
+    "POSTGRES_TARGET"
+  ]
+}
