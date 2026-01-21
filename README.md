@@ -34,3 +34,7 @@ Run assertions:
 ```
 mockdatagen run assert --spec spec.toml --scenario baseline --db out.db
 ```
+
+## LLM-to-TOML workflow
+
+See `docs/HowToCreateSpecsWithLLM.md` for a prompt template and end-to-end flow.
