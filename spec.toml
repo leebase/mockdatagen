@@ -1,5 +1,5 @@
 [project]
-name = "hello_world"
+name = "ops_timesheet_anomaly_story"
 version = "0.1.0"
 seed = 42
 locale = "en_US"
@@ -10,20 +10,57 @@ validate = true
 assert = false
 
 [[schema.tables]]
-name = "hello"
-row_count = 3
+name = "employees"
+row_count = 10
 
 [[schema.tables.fields]]
-name = "id"
+name = "employee_id"
 type = "int"
 nullable = false
 generator = { kind = "sequence", start = 1 }
 
 [[schema.tables.fields]]
-name = "message"
+name = "full_name"
 type = "text"
 nullable = false
-generator = { kind = "constant", value = "Hello, World" }
+generator = { kind = "constant", value = "Test Employee" }
+
+[[schema.tables.fields]]
+name = "department"
+type = "text"
+nullable = false
+generator = { kind = "constant", value = "Ops" }
 
 [schema.tables.primary_key]
-fields = ["id"]
+fields = ["employee_id"]
+
+[[schema.tables]]
+name = "timesheets"
+row_count = 30
+
+[[schema.tables.fields]]
+name = "timesheet_id"
+type = "int"
+nullable = false
+generator = { kind = "sequence", start = 1 }
+
+[[schema.tables.fields]]
+name = "employee_id"
+type = "int"
+nullable = false
+generator = { kind = "constant", value = 1 }
+
+[[schema.tables.fields]]
+name = "work_date"
+type = "text"
+nullable = false
+generator = { kind = "constant", value = "2026-01-01" }
+
+[[schema.tables.fields]]
+name = "hours_worked"
+type = "int"
+nullable = false
+generator = { kind = "constant", value = 151 }
+
+[schema.tables.primary_key]
+fields = ["timesheet_id"]

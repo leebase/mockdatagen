@@ -47,3 +47,8 @@ scripts/ralph/.last-branch
 out.db
 reports/
 progress/
+._*
+*.sync-conflict-*
+*.db
+*.sqlite
+*.sqlite3
